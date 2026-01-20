@@ -1,11 +1,19 @@
 """
 Инициализация маршрутов API v1.
 """
+
 from fastapi import APIRouter
 
-from app.api.v1 import health
+from app.api.v1 import health, profiles
 
-router = APIRouter(prefix="/v1")
+from fastapi import APIRouter
+
+
+router = APIRouter()
+
+
+# Подключаем роутеры из модулей
+router.include_router(profiles.router)
 
 # Подключаем роутеры из модулей
 router.include_router(health.router)
