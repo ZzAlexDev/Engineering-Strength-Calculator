@@ -14,7 +14,9 @@ class BeamCalculator:
     """Калькулятор для расчёта стальной балки."""
     
     # Модуль упругости стали, МПа
-    STEEL_ELASTIC_MODULUS: float = 2.1e5  # 210000 МПа
+    STEEL_ELASTIC_MODULUS: float = 2.1e11  # 210,000 МПа = 2.1 × 10¹¹ Па
+
+
     
     def __init__(self):
         """Инициализация калькулятора."""
@@ -160,31 +162,33 @@ class BeamCalculator:
                                 force_position: float, support_type: str,
                                 moment_of_inertia: float) -> float:
         """Расчёт максимального прогиба."""
+        if support_type != "hinged":
+            # Для MVP считаем только шарнирно-опёртую балку
+            return 0.0
+        
         # Переводим момент инерции из см⁴ в м⁴
-        Ix = moment_of_inertia * 1e-8  # см⁴ → м⁴
+        Ix = moment_of_inertia * 1e-8  # 1 см⁴ = 1e-8 м⁴
+        
+        # Переводим силу из кН в Н
+        P = force * 1000  # кН → Н
         
         a = force_position * length
         b = length - a
         
-        if support_type == "hinged":
-            # Прогиб под силой для шарнирно-опёртой балки
-            if a <= b:
-                x = a
-            else:
-                x = b
-            
-            f_max = (force * b * x * 
-                    (length * length - b * b - x * x) ** 0.5) / \
-                    (3 * self.STEEL_ELASTIC_MODULUS * 1e6 * Ix * length)  # м
-            
-            # Переводим в мм
-            f_max_mm = f_max * 1000
-            return round(f_max_mm, 3)
+        # Проверяем, находится ли сила посередине (с небольшой погрешностью)
+        if abs(a - b) < 1e-6:  # a примерно равно b
+            # Формула для силы посередине: f_max = (P * L³) / (48 * E * I)
+            f_max_m = (P * length ** 3) / (48 * self.STEEL_ELASTIC_MODULUS * Ix)
+        else:
+            # Формула для силы не по центру: f_max = (P * a² * b²) / (3 * E * I * L)
+            f_max_m = (P * a ** 2 * b ** 2) / (3 * self.STEEL_ELASTIC_MODULUS * Ix * length)
         
-        # Для MVP - упрощённый расчёт
-        # В post-MVP добавим другие схемы
-        return 0.0
-    
+        # Переводим в миллиметры
+        f_max_mm = f_max_m * 1000
+        
+        return round(f_max_mm, 3)
+
+
     def _calculate_max_stress(self, max_moment: float, 
                             moment_of_resistance: float) -> float:
         """Расчёт максимального нормального напряжения."""
@@ -239,14 +243,22 @@ class BeamCalculator:
                                 max_stress: float, is_strength_sufficient: bool,
                                 is_stiffness_sufficient: bool) -> List[Dict[str, str]]:
         """Формирование текстовых блоков отчёта."""
+        # Словарь для перевода типов опор
+        support_type_translation = {
+            "hinged": "шарнирно-опёртая",
+            "cantilever": "консоль",
+            "fixed": "жёсткая заделка"
+        }
+        support_type_ru = support_type_translation.get(request.support_type, request.support_type)
+        
         sections = [
             {
                 "title": "Исходные данные",
                 "content": f"Длина пролёта: {request.length} м\n"
-                          f"Тип опор: {request.support_type}\n"
-                          f"Сила: {request.force} кН\n"
-                          f"Положение силы: {request.force_position * 100}% длины\n"
-                          f"Профиль: {profile.name}"
+                        f"Тип опор: {support_type_ru}\n"  # <-- ИСПРАВЛЕНО
+                        f"Сила: {request.force} кН\n"
+                        f"Положение силы: {request.force_position * 100}% длины\n"
+                        f"Профиль: {profile.name}"
             },
             {
                 "title": "Реакции опор",
@@ -255,15 +267,15 @@ class BeamCalculator:
             {
                 "title": "Результаты расчёта",
                 "content": f"Максимальный момент: {max_moment} кН·м\n"
-                          f"Максимальный прогиб: {max_deflection} мм\n"
-                          f"Максимальное напряжение: {max_stress} МПа"
+                        f"Максимальный прогиб: {max_deflection} мм\n"
+                        f"Максимальное напряжение: {max_stress} МПа"
             },
             {
                 "title": "Проверка по нормам",
                 "content": f"Прочность: {'✅ обеспечена' if is_strength_sufficient else '❌ не обеспечена'}\n"
-                          f"Допустимое напряжение: {settings.ALLOWABLE_STRESS} МПа\n"
-                          f"Жёсткость: {'✅ обеспечена' if is_stiffness_sufficient else '❌ не обеспечена'}\n"
-                          f"Допустимый прогиб: L/{int(1/settings.ALLOWABLE_DEFLECTION_RATIO)}"
+                        f"Допустимое напряжение: {settings.ALLOWABLE_STRESS} МПа\n"
+                        f"Жёсткость: {'✅ обеспечена' if is_stiffness_sufficient else '❌ не обеспечена'}\n"
+                        f"Допустимый прогиб: L/{int(1/settings.ALLOWABLE_DEFLECTION_RATIO)}"
             }
         ]
         
