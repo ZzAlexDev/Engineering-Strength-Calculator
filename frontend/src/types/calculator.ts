@@ -1,18 +1,11 @@
-/**
- * Типы данных для расчёта балки.
- * Соответствуют backend моделям (Pydantic схемам).
- */
-
-// Запрос на расчёт балки
 export interface BeamCalculationRequest {
-    length: number           // Длина пролёта, м
-    support_type: string     // Тип опор: 'hinged' | 'cantilever' | 'fixed'
-    force: number            // Сила, кН
-    force_position: number   // Положение силы (0..1)
-    profile_name: string     // Ключ профиля
+    length: number
+    support_type: string
+    force: number
+    force_position: number
+    profile_name: string
 }
 
-// Ответ с результатами расчёта
 export interface BeamCalculationResponse {
     input_data: BeamCalculationRequest
     reactions: Record<string, number>
@@ -32,19 +25,17 @@ export interface BeamCalculationResponse {
     }
 }
 
-// Модель стального профиля
 export interface MaterialProfile {
-    name: string                    // Наименование
-    key: string                     // Уникальный ключ
-    standard: string                // Стандарт (ГОСТ)
-    moment_of_inertia_ix_cm4: number // Момент инерции
-    moment_of_resistance_wx_cm3: number // Момент сопротивления
-    height_mm: number               // Высота, мм
-    width_mm: number                // Ширина, мм
-    mass_kg_m: number               // Масса, кг/м
+    name: string
+    key: string
+    standard: string
+    moment_of_inertia_ix_cm4: number
+    moment_of_resistance_wx_cm3: number
+    height_mm: number
+    width_mm: number
+    mass_kg_m: number
 }
 
-// Список профилей
 export interface MaterialProfileList {
     profiles: MaterialProfile[]
 }

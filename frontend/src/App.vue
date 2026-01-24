@@ -1,172 +1,104 @@
 <template>
-  <div id="app">
-    <header class="app-header">
-      <div class="header-content">
-        <h1>🧮 Engineering Strength Calculator</h1>
-        <div class="header-actions">
-          <Button label="Документация" icon="pi pi-book" text />
-        </div>
-      </div>
-    </header>
-
-    <main class="app-main">
-      <div class="container">
-        <div class="calculator-layout">
-          <!-- Левая колонка: Форма ввода -->
-          <div class="input-section">
-            <div class="placeholder">
-              <i class="pi pi-sliders-h" style="font-size: 3rem; color: var(--surface-400);"></i>
-              <h3>Форма ввода параметров</h3>
-              <p>Здесь будет форма для ввода параметров балки</p>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <h1>{{ i18n.t('app.title') }}</h1>
+                <p>{{ i18n.t('app.subtitle') }}</p>
             </div>
-          </div>
+            <LanguageSwitcher />
+        </header>
 
-          <!-- Правая колонка: Предпросмотр и результаты -->
-          <div class="results-section">
-            <div class="placeholder">
-              <i class="pi pi-chart-bar" style="font-size: 3rem; color: var(--surface-400);"></i>
-              <h3>Результаты расчёта</h3>
-              <p>Здесь будут отображаться результаты и диаграммы</p>
+        <main class="app-main">
+            <BeamInputForm @calculate="handleCalculate" />
+            
+            <div v-if="result" class="results">
+                <h2>Результаты:</h2>
+                <pre>{{ result }}</pre>
             </div>
-          </div>
-        </div>
-      </div>
-    </main>
+        </main>
 
-    <footer class="app-footer">
-      <div class="container">
-        <p>Engineering Strength Calculator v1.0.0 | MVP</p>
-        <p>© 2026 | Создано с использованием Vue 3, TypeScript и FastAPI</p>
-      </div>
-    </footer>
-  </div>
+        <footer class="app-footer">
+            <p>{{ i18n.t('app.footer') }}</p>
+        </footer>
+    </div>
 </template>
 
 <script setup lang="ts">
-import Button from 'primevue/button'
+import { ref } from 'vue'
+import BeamInputForm from '@/components/BeamInputForm.vue'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import { i18n } from '@/services/i18n.service'
+import { calculatorService } from '@/services/calculatorService'
+import type { BeamCalculationResponse, BeamCalculationRequest } from '@/types/calculator'
+
+const result = ref<BeamCalculationResponse | null>(null)
+
+const handleCalculate = async (data: BeamCalculationRequest) => {
+    try {
+        result.value = await calculatorService.calculate(data)
+    } catch (error: any) {
+        alert(i18n.t('errors.calculationFailed', { 
+            message: error.message 
+        }))
+    }
+}
+</script>
+
+<script setup lang="ts">
+import { provide, computed } from 'vue'
+import { i18n } from '@/services/i18n.service'
+
+// Делаем i18n реактивным для всех дочерних компонентов
+const locale = computed(() => i18n.getLocale())
+provide('i18n', { 
+    t: i18n.t.bind(i18n),
+    locale,
+    setLocale: i18n.setLocale.bind(i18n)
+})
 </script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-:root {
-  --primary-color: #3b82f6;
-  --success-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f8fafc;
-  color: #334155;
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
 }
 
 .app-header {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 1rem 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.logo h1 {
+    margin: 0;
+    font-size: 1.5rem;
 }
 
-.header-content h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1e293b;
+.logo p {
+    margin: 0.25rem 0 0;
+    color: #6b7280;
 }
 
 .app-main {
-  min-height: calc(100vh - 140px);
-  padding: 2rem 0;
+    min-height: 400px;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.calculator-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-}
-
-.input-section, .results-section {
-  background: white;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-  min-height: 400px;
-}
-
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  text-align: center;
-  color: #64748b;
-}
-
-.placeholder h3 {
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
-  color: #475569;
-}
-
-.placeholder p {
-  max-width: 300px;
+.results {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
 }
 
 .app-footer {
-  background: white;
-  border-top: 1px solid #e2e8f0;
-  padding: 1.5rem 0;
-  text-align: center;
-  color: #64748b;
-  font-size: 0.875rem;
-}
-
-.app-footer p {
-  margin-bottom: 0.25rem;
-}
-
-@media (max-width: 1024px) {
-  .calculator-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: 1rem;
+    margin-top: 3rem;
+    padding-top: 1rem;
     text-align: center;
-  }
-  
-  .app-main {
-    padding: 1rem 0;
-  }
-  
-  .input-section, .results-section {
-    padding: 1rem;
-    min-height: 300px;
-  }
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
 }
 </style>

@@ -1,0 +1,29 @@
+{
+    "app": {
+        "title": "Engineering Strength Calculator",
+        "subtitle": "Steel beam strength and stiffness calculation",
+        "footer": "ESC-MVP-001 © 2026"
+    },
+    "beamInput": {
+        "length": "Span length (L), m",
+        "supportType": "Support type",
+        "force": "Concentrated force (F), kN",
+        "forcePosition": "Force position (from beam start)",
+        "forcePositionHint": "0 = start, 1 = end, 0.5 = middle",
+        "profile": "Steel profile",
+        "calculate": "Calculate",
+        "loadingProfiles": "Loading profiles...",
+        "noProfiles": "Failed to load profiles list"
+    },
+    "supportTypes": {
+        "hinged": "Simply supported",
+        "cantilever": "Cantilever",
+        "fixed": "Fixed support"
+    },
+    "errors": {
+        "noProfile": "Please select a steel profile",
+        "backendError": "Error loading profiles: {message}",
+        "emptyProfiles": "Profiles list is empty",
+        "calculationFailed": "Calculation error: {message}"
+    }
+}

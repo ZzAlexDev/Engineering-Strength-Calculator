@@ -1,0 +1,29 @@
+{
+    "app": {
+        "title": "Engineering Strength Calculator",
+        "subtitle": "Расчет стальной балки на прочность и жесткость",
+        "footer": "ESC-MVP-001 © 2026"
+    },
+    "beamInput": {
+        "length": "Длина пролета (L), м",
+        "supportType": "Тип опор",
+        "force": "Сосредоточенная сила (F), кН",
+        "forcePosition": "Положение силы (от начала балки)",
+        "forcePositionHint": "0 = начало, 1 = конец, 0.5 = середина",
+        "profile": "Стальной профиль",
+        "calculate": "Рассчитать",
+        "loadingProfiles": "Загрузка профилей...",
+        "noProfiles": "Не удалось загрузить список профилей"
+    },
+    "supportTypes": {
+        "hinged": "Шарнирно-опёртая",
+        "cantilever": "Консоль",
+        "fixed": "Жёсткая заделка"
+    },
+    "errors": {
+        "noProfile": "Пожалуйста, выберите стальной профиль",
+        "backendError": "Ошибка загрузки профилей: {message}",
+        "emptyProfiles": "Список профилей пуст",
+        "calculationFailed": "Ошибка расчета: {message}"
+    }
+}
