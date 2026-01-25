@@ -11,8 +11,9 @@
         <main class="app-main">
             <BeamInputForm @calculate="handleCalculate" />
             
+            <!-- ВРЕМЕННО: отображаем сырой JSON -->
             <div v-if="result" class="results">
-                <h2>Результаты:</h2>
+                <h2>{{ i18n.t('results.title') }}</h2>
                 <pre>{{ result }}</pre>
             </div>
         </main>
@@ -24,32 +25,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, provide } from 'vue'
 import BeamInputForm from '@/components/BeamInputForm.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
-import { i18n } from '@/services/i18n.service'
 import { calculatorService } from '@/services/calculatorService'
+import { i18n } from '@/services/i18n.service'  // ← ТОЛЬКО ОДИН РАЗ импортируем!
 import type { BeamCalculationResponse, BeamCalculationRequest } from '@/types/calculator'
 
-const result = ref<BeamCalculationResponse | null>(null)
+// Реактивная локаль для дочерних компонентов
+const locale = computed(() => i18n.getLocale())
 
+// Результаты расчета
+const result = ref<BeamCalculationResponse | null>(null)
+    
+// Обработчик расчета
 const handleCalculate = async (data: BeamCalculationRequest) => {
     try {
+        console.log('Отправка данных:', data)
         result.value = await calculatorService.calculate(data)
+        console.log('Получены результаты:', result.value)
     } catch (error: any) {
+        console.error('Ошибка расчета:', error)
         alert(i18n.t('errors.calculationFailed', { 
             message: error.message 
         }))
     }
 }
-</script>
 
-<script setup lang="ts">
-import { provide, computed } from 'vue'
-import { i18n } from '@/services/i18n.service'
-
-// Делаем i18n реактивным для всех дочерних компонентов
-const locale = computed(() => i18n.getLocale())
+// Пробрасываем i18n в дочерние компоненты через provide
 provide('i18n', { 
     t: i18n.t.bind(i18n),
     locale,
@@ -57,7 +60,7 @@ provide('i18n', {
 })
 </script>
 
-<style>
+<style scoped>
 .app-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -92,6 +95,13 @@ provide('i18n', {
     padding: 1rem;
     background: #f9fafb;
     border-radius: 8px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.results h2 {
+    margin-top: 0;
 }
 
 .app-footer {
